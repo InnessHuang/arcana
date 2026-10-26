@@ -3,16 +3,16 @@
 import { useRef, useState } from "react";
 import { spreads, topics, type Spread } from "@/lib/home-content";
 import { Arrow, TarotArt, TopicIcon } from "./artwork";
-import { ExplorationDialog } from "./exploration-dialog";
+import { useRouter } from "next/navigation";
+import { saveSession } from "@/lib/tarot/session";
 
 export function HomeExperience() {
   const [question, setQuestion] = useState("");
   const [selected, setSelected] = useState<Spread>(spreads[1]);
   const [error, setError] = useState("");
-  const [session, setSession] = useState<{
-    question: string;
-    spread: Spread;
-  } | null>(null);
+  const router = useRouter();
+  const starting = useRef(false);
+  const [busy, setBusy] = useState(false);
   const [dailyRevealed, setDailyRevealed] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
 
@@ -37,8 +37,20 @@ export function HomeExperience() {
       input.current?.focus();
       return;
     }
+    if (starting.current) return;
+    starting.current = true;
+    setBusy(true);
     setError("");
-    setSession({ question: question.trim(), spread: selected });
+    try {
+      saveSession({ question: question.trim(), spread: selected, cards: [] });
+      router.push("/reading");
+    } catch {
+      starting.current = false;
+      setBusy(false);
+      setError(
+        "无法使用浏览器会话存储。请允许此站点存储后重试；问题尚未上传。",
+      );
+    }
   }
 
   return (
@@ -92,13 +104,13 @@ export function HomeExperience() {
               <span className="spread-label">
                 {selected.count} 张牌 · {selected.name}
               </span>
-              <button type="submit" className="solid-button">
-                探索这个问题 <Arrow />
+              <button type="submit" className="solid-button" disabled={busy}>
+                {busy ? "正在进入抽牌…" : "探索这个问题"} <Arrow />
               </button>
             </div>
           </form>
           <p className="question-help" id="question-help">
-            前端体验预览 · 问题不会上传或保存 · {question.length}/300
+            本地模拟解读 · 仅当前标签页暂存，不上传 · {question.length}/300
           </p>
           <div className="question-examples">
             <span>还没有头绪？</span>
@@ -298,13 +310,6 @@ export function HomeExperience() {
           <span className="editorial-index">NOTES ON SELF-DISCOVERY — 001</span>
         </aside>
       </section>
-      {session && (
-        <ExplorationDialog
-          key={session.spread.id + session.question}
-          session={session}
-          onClose={() => setSession(null)}
-        />
-      )}
     </>
   );
 }
