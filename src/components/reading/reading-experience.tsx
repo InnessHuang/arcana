@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { TarotArt } from "@/components/home/artwork";
 import { drawCards } from "@/lib/tarot/draw";
-import { describeCard, summarize } from "@/lib/tarot/reading";
+import { AIReadingPanel } from "./ai-reading-panel";
 import {
   readSession,
   saveSession,
@@ -123,7 +123,7 @@ export function ReadingExperience() {
         </h1>
         <blockquote>{session.question}</blockquote>
         <p className="reading-demo-label">
-          本地模拟解读 · 规则模板演示 · 非 AI 生成
+          牌面随机抽取 · 初始解读由 DeepSeek 生成 · 后续探索仍为演示
         </p>
       </header>
       {error && (
@@ -205,17 +205,18 @@ export function ReadingExperience() {
                     {item.card.keywords.join(" · ")}
                   </p>
                   <p className="card-meaning">
-                    {describeCard(session.question, item)}
+                    牌库参考：{item.card[item.orientation]}。
                   </p>
                 </article>
               ))}
             </div>
           </section>
-          <section className="reading-summary">
-            <p className="eyebrow">A THREAD TO FOLLOW / 整体摘要</p>
-            <h2>把这些线索，放回你的生活。</h2>
-            <p>{summarize(session.question, session.spread, session.cards)}</p>
-          </section>
+          <AIReadingPanel
+            key={session.cards
+              .map((item) => item.card.id + item.orientation)
+              .join("-")}
+            session={session}
+          />
           <section className="exploration-options" aria-label="继续探索">
             <button
               className={mode === "deep" ? "active" : ""}
@@ -225,7 +226,7 @@ export function ReadingExperience() {
             >
               <span className="eyebrow">LOOK WITHIN</span>
               <strong>
-                深入探索 <span aria-hidden="true">↗</span>
+                深入探索（演示） <span aria-hidden="true">↗</span>
               </strong>
               <span>连接牌义，回到你的感受与期待。</span>
             </button>
@@ -237,7 +238,7 @@ export function ReadingExperience() {
             >
               <span className="eyebrow">STEP INTO LIFE</span>
               <strong>
-                现实探索 <span aria-hidden="true">↗</span>
+                现实探索（演示） <span aria-hidden="true">↗</span>
               </strong>
               <span>区分事实与假设，找到可验证的小行动。</span>
             </button>
@@ -340,7 +341,10 @@ export function ReadingExperience() {
         </>
       )}
       <footer className="reading-disclaimer">
-        塔罗内容仅用于自我反思和娱乐，不代表对未来的确定预测，也不替代医疗、心理、法律或财务等专业建议。本页解读和探索提示均为本地模板演示，未接入真实大模型；问题与结果仅暂存在当前浏览器标签页，不上传、不进入数据库。
+        塔罗内容仅用于自我反思和娱乐，不代表对未来的确定预测，也不替代医疗、心理、法律或财务等专业建议。初始
+        AI 解读仅在你点击生成或切换风格后请求
+        DeepSeek；深入探索与现实探索仍为本地模板演示。问题与牌面暂存在当前标签页；生成解读时会将问题、牌面及明确补充的背景发送给
+        DeepSeek，本站不写入数据库。
       </footer>
     </div>
   );

@@ -110,7 +110,8 @@ export function HomeExperience() {
             </div>
           </form>
           <p className="question-help" id="question-help">
-            本地模拟解读 · 仅当前标签页暂存，不上传 · {question.length}/300
+            问题与牌面在当前标签页暂存 · AI 解读需在结果页确认发送 ·{" "}
+            {question.length}/300
           </p>
           <div className="question-examples">
             <span>还没有头绪？</span>
